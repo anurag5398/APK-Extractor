@@ -5,7 +5,7 @@ Requirements:
 1) Python 3.5+
 2) ADB
 
-Note: Android Debugging should be manually enabled from the device developer's options.
+Note: Android USB Debugging should be manually enabled from the device developer's options.
 
 Steps to USe:
 @ Connect device to the PC.
