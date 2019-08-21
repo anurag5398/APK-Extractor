@@ -1,13 +1,13 @@
-PATH = r"C:\Users\Anurag S\Documents"
-
 import os
 import time
 import subprocess
 import shutil
 from zipfile import ZipFile
 import glob
+import sys
 
-
+###Set the next keyword to find specific packages
+SpecificPackage = "honeywell"
 
 #########################
 print("###|||###########|||#########|||||###################||||||#################\t")
@@ -17,17 +17,50 @@ print("######|||##|||#################|||###################|||####||###########
 print("#######||#||#################|||#####################|||##|||###############\t")
 print("########||#################|||||||||||###############||||||#################\t")
 #########################
+#flag to run the program
+cont = 1
 
+#########################
+#os selection
 print("\nPlease select your Os:\n")
 print("1) Windows\t")
 print("2) Linux\n")
 os_val = input("Enter Choice: ")
 if(os_val=="1"):
     separator = "\\"
-if(os_val=="2"):
+elif(os_val=="2"):
     separator = "/"
+else:
+    #default windows
+    separator = "\\"
 
-cont = 1
+########################
+#Path to store apks
+PATH = os.getcwd()
+
+########################
+#set swap space. default: /sdcard
+ext_folders = subprocess.check_output(["adb","shell","echo","$EXTERNAL_STORAGE"]).decode("utf-8")
+print("\nStorage found on device: ")
+print(ext_folders)
+try:
+    sd = subprocess.check_output(["adb","shell","mkdir","/sdcard/test_v2"])
+    sd = subprocess.check_output(["adb","shell","rm","-r","/sdcard/test_v2"])
+    print("/sdcard will be used for swap space")
+    swap_dir = "/sdcard"
+except:
+    print("\n/sdcard/ is not present or dosen't have write permission")
+    swap_dir = input("Enter any directory from the device for using it as swap space. no changes will be made to that folder(Ex. /sdcard ): ")
+    print(swap_dir)
+    dir_test = swap_dir + "/test_v2"
+    try:
+        sd = subprocess.check_output(["adb","shell","mkdir",dir_test])
+        sd = subprocess.check_output(["adb","shell","rm","-r",dir_test])
+        print(swap_dir," will be used for swap space")
+    except:
+        print("\nSome problem with the directory. Make sure it exists, and has write permission")
+        cont = 0
+
 def full_adb():
     global cont
     # checking for connected devices
@@ -43,9 +76,9 @@ def full_adb():
     val = input("Enter Choice: ")
     if(val=="1"):
         print("\n1) View list of all Packages\t")
-        print("2) View list of Honeywell Packages\t")
+        print("2) View list of",SpecificPackage," Packages\t")
         print("3) Download all APKs\t")
-        print("4) Download Honeywell APKs\t")
+        print("4) Download", SpecificPackage, " APKs\t")
         print("5) Exit\t")
         val2 = input("Enter Choice: ")
         #b is package name list
@@ -57,10 +90,18 @@ def full_adb():
 
             for nump in range(len(b)-1):
                 print(b[nump])
+            print("#############################################")
             print("Total Apks are ", len(b)-1)
-            print("Mission Accomplished")
+            print("#############################################")
+            print("\nMission Accomplished")
+            cont_small = input("\nDo you want to continue(yes/no)? :")
+            if(cont_small=="no"):
+                cont = 0
+            else:
+                pass
 
         elif(val2=="3"):
+            zip_name = input("\nEnter the name for your zip file: ")
             failed_download_list = []
             b = []
             print("\n")
@@ -85,18 +126,30 @@ def full_adb():
                     dwnld = subprocess.check_output(["adb","pull",current_path,dest_path],shell=True)
                     print(dwnld.decode("utf-8"))
                 except:
-                    failed_download_list.append(pname)
+                    swap_path = swap_dir + "/" + pname + ".apk"
+                    try:
+                        swap_mv = subprocess.check_output(["adb","shell","mv",current_path,swap_path])
+                        swap_mv = subprocess.check_output(["adb","pull",swap_path,dest_path])
+                        swap_del = subprocess.check_output(["adb","shell","rm",swap_path])
+                        print("Swapped and moved")
+                    except:
+                        try:
+                            swap_mv = subprocess.check_output(["adb","pull",swap_path,dest_path])
+                            swap_del = subprocess.check_output(["adb","shell","rm",swap_path])
+                            print("Swapped and moved")
+                        except:
+                            failed_download_list.append(pname)
         
-            zipname = PATH + separator + device_name + ".zip"
+            zipname = PATH + separator + zip_name + ".zip"
             if(os.path.isfile(zipname)==True):
-                zipname = PATH + separator + device_name + "_v2.zip"
+                zipname = PATH + separator + zip_name + "_v2.zip"
             zipObj = ZipFile(zipname, 'w')
             glob_temp = directory_create + separator + "*.apk"
             apksinfolder = glob.glob(glob_temp)
             for eachapk in apksinfolder:
                 zipObj.write(eachapk)
             zipObj.close()
-            print("Total aPKS in zip are ", len(apksinfolder))
+           
             shutil.rmtree(directory_create)
             print("\nFAILED to Download APKs are (permission denied):\t")
             if(failed_download_list==[]):
@@ -104,7 +157,15 @@ def full_adb():
             else:
                 for e in failed_download_list:
                     print(e)
-            print("Mission Accomplished")
+            print("#############################################")
+            print("Total aPKS in zip are ", len(apksinfolder))
+            print("#############################################")
+            print("\nMission Accomplished")
+            cont_small = input("\nDo you want to continue(yes/no)? :")
+            if(cont_small=="no"):
+                cont = 0
+            else:
+                pass
 
         elif(val2=="2"):
             b = []
@@ -114,23 +175,29 @@ def full_adb():
             b = packages.split("\n")
 
             for nump in range(len(b)-1):
-                if(b[nump].find("honeywell")!= -1):
+                if(b[nump].find(SpecificPackage)!= -1):
                     hon_b.append(b[nump])
-                #lot of FalsePositives for Keyweord:hon
-                #if(b[nump].find("hon")!= -1):
-                #    hon_b.append(b[nump])
+
             if(hon_b!=[]):
                 for eachh in hon_b:
                     print(eachh)
+                print("######################################")
                 print("Total Apks are ", len(hon_b))
+                print("######################################")
             else:
                 print("No Honeywell Apps are found on the device :(")
-            print("Mission Accomplished")
+            print("\nMission Accomplished")
+            cont_small = input("\nDo you want to continue(yes/no)? :")
+            if(cont_small=="no"):
+                cont = 0
+            else:
+                pass
 
         elif(val2=="4"):
             failed_download_list = []
             b = []
             bb = []
+            zip_name = input("\nEnter the name for your zip file: ")
             print("\n")
             directory_create = PATH + separator + device_name
             if(os.path.isdir(directory_create)==True):
@@ -138,9 +205,9 @@ def full_adb():
             subprocess.check_output(["mkdir",directory_create],shell=True)
 
             packages = subprocess.check_output(["adb","shell","pm","list","packages"]).decode("utf-8")
-            b = packages.split("\n")#packge name with \r and package:
+            b = packages.split("\n")
             for eachb in b:
-                if(eachb.find("honeywell")!=-1):
+                if(eachb.find(SpecificPackage)!=-1):
                     bb.append(eachb)
 
             for nump in range(len(bb)):
@@ -159,16 +226,18 @@ def full_adb():
                 except:
                     failed_download_list.append(pname)
         
-            zipname = PATH + separator + device_name + "_hon.zip"
+            zipname = PATH + separator + zip_name + "_hon.zip"
             if(os.path.isfile(zipname)==True):
-                zipname = PATH + separator + device_name + "_v2_hon.zip"
+                zipname = PATH + separator + zip_name + "_v2_hon.zip"
             zipObj = ZipFile(zipname, 'w')
             glob_temp = directory_create + separator + "*.apk"
             apksinfolder = glob.glob(glob_temp)
             for eachapk in apksinfolder:
                 zipObj.write(eachapk)
             zipObj.close()
+            print("#############################################")
             print("Total aPKS in zip are ", len(apksinfolder))
+            print("#############################################")
             shutil.rmtree(directory_create)
             print("\nFAILED to Download APKs are (permission denied):\t")
             if(failed_download_list==[]):
@@ -176,7 +245,12 @@ def full_adb():
             else:
                 for e in failed_download_list:
                     print(e)
-            print("Mission Accomplished")
+            print("\nMission Accomplished")
+            cont_small = input("\nDo you want to continue(yes/no)? :")
+            if(cont_small=="no"):
+                cont = 0
+            else:
+                pass
 
         elif(val2=="5"):
             cont = 0
@@ -188,6 +262,7 @@ def full_adb():
     elif(val=="2"):
         print("\nTry to reconnect device.\t")
         print("Note: Keep only one Android device conncted at a time.\t")
+
     
     elif(val=="3"):
         cont = 0
