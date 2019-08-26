@@ -40,26 +40,32 @@ PATH = os.getcwd()
 
 ########################
 #set swap space. default: /sdcard
-ext_folders = subprocess.check_output(["adb","shell","echo","$EXTERNAL_STORAGE"]).decode("utf-8")
-print("\nStorage found on device: ")
-print(ext_folders)
 try:
-    sd = subprocess.check_output(["adb","shell","mkdir","/sdcard/test_v2"])
-    sd = subprocess.check_output(["adb","shell","rm","-r","/sdcard/test_v2"])
-    print("/sdcard will be used for swap space")
-    swap_dir = "/sdcard"
+    ext_folders = subprocess.check_output(["adb","shell","echo","$EXTERNAL_STORAGE"]).decode("utf-8")
+    print("\nStorage found on device: ")
+    print(ext_folders)
 except:
-    print("\n/sdcard/ is not present or dosen't have write permission")
-    swap_dir = input("Enter any directory from the device for using it as swap space. no changes will be made to that folder(Ex. /sdcard ): ")
-    print(swap_dir)
-    dir_test = swap_dir + "/test_v2"
-    try:
-        sd = subprocess.check_output(["adb","shell","mkdir",dir_test])
-        sd = subprocess.check_output(["adb","shell","rm","-r",dir_test])
-        print(swap_dir," will be used for swap space")
-    except:
-        print("\nSome problem with the directory. Make sure it exists, and has write permission")
-        cont = 0
+    cont = 0
+    print("Check If Device is properly Connected and DB enabled")
+
+if(cont == 1):
+	try:
+		sd = subprocess.check_output(["adb","shell","mkdir","/sdcard/test_v2"])
+		sd = subprocess.check_output(["adb","shell","rm","-r","/sdcard/test_v2"])
+		print("/sdcard will be used for swap space")
+		swap_dir = "/sdcard"
+	except:
+		print("\n/sdcard/ is not present or dosen't have write permission")
+		swap_dir = input("Enter any directory from the device for using it as swap space. no changes will be made to that folder(Ex. /sdcard ): ")
+		print(swap_dir)
+		dir_test = swap_dir + "/test_v2"
+		try:
+			sd = subprocess.check_output(["adb","shell","mkdir",dir_test])
+			sd = subprocess.check_output(["adb","shell","rm","-r",dir_test])
+			print(swap_dir," will be used for swap space")
+		except:
+			print("\nSome problem with the directory. Make sure it exists, and has write permission")
+			cont = 0
 
 def full_adb():
     global cont
@@ -76,9 +82,9 @@ def full_adb():
     val = input("Enter Choice: ")
     if(val=="1"):
         print("\n1) View list of all Packages\t")
-        print("2) View list of",SpecificPackage," Packages\t")
+        print("2) View list of ",SpecificPackage," Packages\t")
         print("3) Download all APKs\t")
-        print("4) Download", SpecificPackage, " APKs\t")
+        print("4) Download ", SpecificPackage, " APKs\t")
         print("5) Exit\t")
         val2 = input("Enter Choice: ")
         #b is package name list
@@ -158,7 +164,8 @@ def full_adb():
                 for e in failed_download_list:
                     print(e)
             print("#############################################")
-            print("Total aPKS in zip are ", len(apksinfolder))
+            print("Total aPKS in zip are ", len(apksinfolder),"\t")
+            print("ZIP file saved in ",PATH)
             print("#############################################")
             print("\nMission Accomplished")
             cont_small = input("\nDo you want to continue(yes/no)? :")
@@ -235,9 +242,10 @@ def full_adb():
             for eachapk in apksinfolder:
                 zipObj.write(eachapk)
             zipObj.close()
-            print("#############################################")
-            print("Total aPKS in zip are ", len(apksinfolder))
-            print("#############################################")
+            print("##############################################################")
+            print("Total aPKS in zip are ", len(apksinfolder),"\t")
+            print("ZIP file saved in ",PATH)
+            print("##############################################################")
             shutil.rmtree(directory_create)
             print("\nFAILED to Download APKs are (permission denied):\t")
             if(failed_download_list==[]):
