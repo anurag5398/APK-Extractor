@@ -7,7 +7,7 @@ import glob
 import sys
 
 ###Set the next keyword to find specific packages
-SpecificPackage = "honeywell"
+SpecificPackage = "****"
 
 #flag to run the program
 cont = 1
