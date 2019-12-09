@@ -184,7 +184,7 @@ def full_adb():
                 print("Total Apks are ", len(hon_b))
                 print("######################################")
             else:
-                print("No Honeywell Apps are found on the device :(")
+                print("No **** Apps are found on the device :(")
             print("\nMission Accomplished")
             cont_small = input("\nDo you want to continue(yes/no)? :")
             if(cont_small=="no"):
@@ -227,7 +227,7 @@ def full_adb():
         
             zipname = PATH + separator + zip_name + "_hon.zip"
             if(os.path.isfile(zipname)==True):
-                zipname = PATH + separator + zip_name + "_v2_hon.zip"
+                zipname = PATH + separator + zip_name + "_v2_name.zip"
             zipObj = ZipFile(zipname, 'w')
             glob_temp = directory_create + separator + "*.apk"
             apksinfolder = glob.glob(glob_temp)
